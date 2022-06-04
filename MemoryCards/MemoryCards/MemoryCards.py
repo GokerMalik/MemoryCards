@@ -3,7 +3,6 @@ import os
 import tkinter
 import tkinter.messagebox
 import csv
-import time
 
 ###########################################################
 
@@ -14,10 +13,15 @@ data_dir = main_dir + "data.csv"
 
 decks = {"Default"}
 
+### Set global variables
 selectedDeck = ''
 sessionStatus = 0
 checkMessage = 0
-Answer = ''
+Response = ''
+questions = []
+correctAnswer = ''
+QuestionNum = -1
+sides = [0,1]
 
 #create a window instance
 window = tkinter.Tk()
@@ -179,6 +183,11 @@ def fStartSession():
 
     global sessionStatus
     global checkMessage
+    global Response
+    global questions
+    global correctAnswer
+    global QuestionNum
+    global sides
 
     if ((sessionStatus == 1) and (checkMessage == 0)):
         tkinter.messagebox.showinfo("Duplicated Sessions", "The session was already started")
@@ -186,38 +195,51 @@ def fStartSession():
 
     selected = deckList.curselection()
 
-    if (len(selected) == 0):
+    if ((len(selected) == 0) and (checkMessage == 0)):
         tkinter.messagebox.showinfo("No selection", "Please select a desk from the list")
         return 1
     else:
         sessionStatus = 1
-        if (checkMessage == 0):
+        if (checkMessage == 0):                         #coming from the start session button
             Question.pack(side = 'bottom')
+            Question.config(bg = '#aee1e5')
+            file = open(data_dir, 'r', encoding = 'UTF-8', newline='')
+            reader = csv.reader(file)
+            allCards = list(reader)
+            file.close()
 
-        file = open(data_dir, 'r', encoding = 'UTF-8', newline='')
-        reader = csv.reader(file)
-        allCards = list(reader)
-        file.close()
+            for quest in allCards:
+                if (quest[2] == deckList.get(selected)):
+                    questions.append(quest)
 
-        if (checkMessage == 1):
-            Question.delete(text)
-            pass
+        else:                                               #coming from the check button
+            if (Response == correctAnswer):
+                questions.remove(questions[QuestionNum])
+                if (len(questions) == 0):
+                    tkinter.messagebox.showinfo("Finished!!", "All the cards are finished")
+                    checkMessage = 0
+                    sessionStatus = 0
+                    Question.itemconfig(text, text = '')
+                    Question.itemconfig(feedBack, text = '')
+                    Question.config(bg = '#f0f0f0')
+                    return 0
 
-        questions = []
-        sides = [0,1]
-        for quest in allCards:
-            if (quest[2] == deckList.get(selected)):
-                questions.append(quest)
+            else:
+                tkinter.messagebox.showinfo("Nope", "This isn't the correct anser")
+                checkMessage = 0
+                return 0
+       
+        ##tell how many cards are left
+        Question.itemconfig(feedBack, text = str(len(questions)) + " cards left")
 
         qIndices = list(range(0, len(questions)))
         QuestionNum = random.sample(qIndices, 1)[0]
         QuestionSide = random.sample(sides, 1)[0]
+        correctAnswer = questions[QuestionNum][QuestionSide*(-1)+(1)]   #cross-switch between 1 and 0
 
         ## Create question card
+        Question.itemconfig(text, text = questions[QuestionNum][QuestionSide])
 
-        text = Question.create_text(100,50,fill="#e1924d",font="Times 20 bold", text=questions[QuestionNum][QuestionSide])
-
-        sessionStatus = 0
         checkMessage = 0
 
     return 0
@@ -232,10 +254,14 @@ def submit():
 #check button
 def check():
     global checkMessage
-    global Answer
+    global Response
+
+    if (sessionStatus == 0):
+        tkinter.messagebox.showinfo("No Session", "Please first start a session")
+        return 1
 
     checkMessage = 1
-    Answer = AnswerBox.get()
+    Response = AnswerBox.get()
 
     fStartSession()
 
@@ -339,5 +365,9 @@ FrontFrame.pack(side = 'top')
 
 #locate remove button
 RemoveCard.pack(side = 'top')
+
+#Create question text
+text = Question.create_text(100,50,fill="#e1924d",font="Times 20 bold", text='')
+feedBack = Question.create_text(100,180,font="Times 15", text='')
 
 window.mainloop()
