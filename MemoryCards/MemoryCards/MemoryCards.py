@@ -3,6 +3,7 @@ import os
 import tkinter
 import tkinter.messagebox
 import csv
+import time
 
 ###########################################################
 
@@ -14,6 +15,9 @@ data_dir = main_dir + "data.csv"
 decks = {"Default"}
 
 selectedDeck = ''
+sessionStatus = 0
+checkMessage = 0
+Answer = ''
 
 #create a window instance
 window = tkinter.Tk()
@@ -49,7 +53,7 @@ deckList = list(decks)
 tkDecks = tkinter.StringVar(value = deckList)
 
 
-#define the cards
+#define the cards   #I did not really had an object oriented approach, tbf. This part maybe can be optimised later.
 class cards:
     def __init__(self, frontSide, backSide, Deck):
         self.frontSide = frontSide
@@ -73,7 +77,7 @@ def newcard(side1, side2, deck):
 
     #check entries
     if (len(side2)==0 and len(deck)==0):
-        tkinter.messagebox.showinfo(window, message = "At least one side of the card must have an entry")
+        tkinter.messagebox.showinfo("Empty Item", "At least one side of the card must have an entry")
         return 1
 
     #create the card
@@ -91,11 +95,11 @@ def newcard(side1, side2, deck):
     for line in existing:
         ExistingEntries.append(list)
         if (line[2] == card.Deck and (line[0] == card.frontSide or line[1] == card.backSide)):
-            tkinter.messagebox.showinfo(window, message = "At least one side of the card already exist in the desk")
+            tkinter.messagebox.showinfo("Duplication", "At least one side of the card already exist in the desk")
             GetExisting.close()
             return 1
 
-    #update the deck dictionary
+    #update the deck dictionary (this part can be maybe removed later)
     new_key = {card.Deck}
     decks.update(new_key)
 
@@ -104,7 +108,7 @@ def newcard(side1, side2, deck):
     newline = csv.writer(WriteFile)
     newline.writerows([[card.frontSide, card.backSide, card.Deck]])
     WriteFile.close()
-    tkinter.messagebox.showinfo(window, message = "Saved")
+    tkinter.messagebox.showinfo("Success!!", "Saved")
 
     #updare the decklist
     current_list = deckList.get(0, 'end')
@@ -120,7 +124,7 @@ def showFronts():
     selected = deckList.curselection()
 
     if (len(selected) == 0):
-        tkinter.messagebox.showinfo("No selection", message = "Please select a desk from the menu above")
+        tkinter.messagebox.showinfo("No selection", "Please select a desk from the menu above")
         return 1
     else:
         global selectedDeck
@@ -146,7 +150,7 @@ def RemoveCard():
     chosenCard = FrontList.curselection()
 
     if (len(chosenCard) == 0):
-        tkinter.messagebox.showinfo("Please Select a Card, first")
+        tkinter.messagebox.showinfo("no selection", "Please Select a Card, first")
         return 1
     else:
 
@@ -170,6 +174,54 @@ def RemoveCard():
 
         return 0
 
+#Start Session
+def fStartSession():
+
+    global sessionStatus
+    global checkMessage
+
+    if ((sessionStatus == 1) and (checkMessage == 0)):
+        tkinter.messagebox.showinfo("Duplicated Sessions", "The session was already started")
+        return 1
+
+    selected = deckList.curselection()
+
+    if (len(selected) == 0):
+        tkinter.messagebox.showinfo("No selection", "Please select a desk from the list")
+        return 1
+    else:
+        sessionStatus = 1
+        if (checkMessage == 0):
+            Question.pack(side = 'bottom')
+
+        file = open(data_dir, 'r', encoding = 'UTF-8', newline='')
+        reader = csv.reader(file)
+        allCards = list(reader)
+        file.close()
+
+        if (checkMessage == 1):
+            Question.delete(text)
+            pass
+
+        questions = []
+        sides = [0,1]
+        for quest in allCards:
+            if (quest[2] == deckList.get(selected)):
+                questions.append(quest)
+
+        qIndices = list(range(0, len(questions)))
+        QuestionNum = random.sample(qIndices, 1)[0]
+        QuestionSide = random.sample(sides, 1)[0]
+
+        ## Create question card
+
+        text = Question.create_text(100,50,fill="#e1924d",font="Times 20 bold", text=questions[QuestionNum][QuestionSide])
+
+        sessionStatus = 0
+        checkMessage = 0
+
+    return 0
+
 #submit button
 def submit():
     side1 = Entry1.get()
@@ -179,10 +231,17 @@ def submit():
 
 #check button
 def check():
-    print(AnswerBox.get() + " checked")
+    global checkMessage
+    global Answer
+
+    checkMessage = 1
+    Answer = AnswerBox.get()
+
+    fStartSession()
 
 
-### creater entry box ####
+
+### create entry box ####
 
 #Answer Box
 AnswerBox = tkinter.Entry(CheckFrame, font = ("Arial", 10))
@@ -205,10 +264,7 @@ SubmitButton = tkinter.Button(InputFrame,
                    )
 
 #check button
-CheckButton = tkinter.Button(CheckFrame,
-                   text = "Check!",
-                   command = check
-                   )
+CheckButton = tkinter.Button(CheckFrame, text = "Check!", command = check)
 
 #ShowFronts button
 ShowFronts = tkinter.Button(ShowHideFrame, text = "Show Cards", command = showFronts)
@@ -218,6 +274,9 @@ HideFronts = tkinter.Button(ShowHideFrame, text = "Hide Cards", command = HideFr
 
 #RemoveCard button
 RemoveCard = tkinter.Button(ListLocation, text = "Remove Card", command = RemoveCard)
+
+#StartSession button
+StartSession = tkinter.Button(CheckFrame, text = "Start Session", command = fStartSession)
 
 #deck list
 ### Create listbox and scrollbar
@@ -236,6 +295,9 @@ FrontScroll = tkinter.Scrollbar(FrontFrame, orient = 'vertical', width = 16)
 FrontList.config(yscrollcommand=FrontScroll.set)
 FrontScroll.config(command = deckList.yview)
 
+## Create canvas
+Question = tkinter.Canvas(window, bg = '#aee1e5', height = 200, width = 200)
+
 ### locate items ####
 
 #locate the lists, scroolbars
@@ -246,6 +308,7 @@ FrontScroll.pack(side='right', fill='y')
 FrontList.pack(side = 'right')
 
 #locate the answer box and the check button
+StartSession.pack(side = 'bottom')
 AnswerBox.pack(side = 'left')
 CheckButton.pack(side = 'right')
 
