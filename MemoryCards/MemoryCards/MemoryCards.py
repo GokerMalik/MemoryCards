@@ -23,16 +23,18 @@ correctAnswer = ''
 QuestionNum = -1
 sides = [0,1]
 
+encoding = 'utf-8'
+
 #create a window instance
 window = tkinter.Tk()
 window.geometry("500x500")
 window.title("Memory")
 
 #create data file if doesn't exist
-SetFile = open(data_dir, 'a', encoding = 'UTF-8', newline='')
+SetFile = open(data_dir, 'a', encoding = encoding, newline='')
 SetFile.close()
 
-CheckFile = open(data_dir, 'r', encoding = 'UTF-8', newline='')
+CheckFile = open(data_dir, 'r', encoding = encoding, newline='')
 reader = csv.reader(CheckFile)
 rows = list(reader)
 rowNum = len(rows)
@@ -40,7 +42,7 @@ rowNum = len(rows)
 #Write the heading if the file is newly created.
 if (rowNum==0):
     CheckFile.close()
-    OptimiseFile = open(data_dir, 'a', encoding = 'UTF-8', newline='')
+    OptimiseFile = open(data_dir, 'a', encoding = encoding, newline='')
     newline = csv.writer(OptimiseFile)
     newline.writerows([['Front Side','Back Side','Deck']])
     OptimiseFile.close()
@@ -67,10 +69,10 @@ class cards:
 
 
 #define frames
-ListLocation = tkinter.Frame(window, bg = 'blue')
-ListFrame = tkinter.Frame(ListLocation, height = 300, width = 200, bg = 'red')
-FrontFrame = tkinter.Frame(ListLocation, height = 300, width = 200, bg = 'red')
-InputFrame = tkinter.Frame(window, bg = 'red')
+ListLocation = tkinter.Frame(window)
+ListFrame = tkinter.Frame(ListLocation, height = 300, width = 200)
+FrontFrame = tkinter.Frame(ListLocation, height = 300, width = 200)
+InputFrame = tkinter.Frame(window)
 CheckFrame = tkinter.Frame(window)
 ShowHideFrame = tkinter.Frame(ListLocation, width = 200)
 
@@ -92,7 +94,7 @@ def newcard(side1, side2, deck):
         card.Deck = 'Default'
 
     #update the file
-    GetExisting = open(data_dir, 'r', encoding = 'UTF-8', newline='')
+    GetExisting = open(data_dir, 'r', encoding = encoding, newline='')
     existing = csv.reader(GetExisting)
     ExistingEntries = []
 
@@ -108,7 +110,7 @@ def newcard(side1, side2, deck):
     decks.update(new_key)
 
     #update the file
-    WriteFile = open(data_dir, 'a', encoding = 'UTF-8', newline='')
+    WriteFile = open(data_dir, 'a', encoding = encoding, newline='')
     newline = csv.writer(WriteFile)
     newline.writerows([[card.frontSide, card.backSide, card.Deck]])
     WriteFile.close()
@@ -134,7 +136,7 @@ def showFronts():
         global selectedDeck
         selectedDeck = deckList.get(selected)
         FrontList.delete(0, 'end')
-        GetCards = open(data_dir, 'r', encoding = 'UTF-8', newline='')
+        GetCards = open(data_dir, 'r', encoding = encoding, newline='')
         reader = csv.reader(GetCards)
         AllCards = list(reader)
         GetCards.close()
@@ -158,7 +160,7 @@ def RemoveCard():
         return 1
     else:
 
-        GetCards = open(data_dir, 'r', encoding = 'UTF-8', newline='')
+        GetCards = open(data_dir, 'r', encoding = encoding, newline='')
         reader = csv.reader(GetCards)
         FindCards = list(reader)
         GetCards.close()
@@ -169,7 +171,7 @@ def RemoveCard():
             if ((curnCard[2] != selectedDeck) or (curnCard[0] != FrontList.get(chosenCard))):
                 new_cards.append(curnCard)
 
-        file = open(data_dir, 'w', encoding = 'UTF-8', newline='')
+        file = open(data_dir, 'w', encoding = encoding, newline='')
         new_line = csv.writer(file)
         new_line.writerows(new_cards)
         file.close()
@@ -203,7 +205,7 @@ def fStartSession():
         if (checkMessage == 0):                         #coming from the start session button
             Question.pack(side = 'bottom')
             Question.config(bg = '#aee1e5')
-            file = open(data_dir, 'r', encoding = 'UTF-8', newline='')
+            file = open(data_dir, 'r', encoding = encoding, newline='')
             reader = csv.reader(file)
             allCards = list(reader)
             file.close()
@@ -213,7 +215,7 @@ def fStartSession():
                     questions.append(quest)
 
         else:                                               #coming from the check button
-            if (Response == correctAnswer):
+            if (Response.casefold().strip() == correctAnswer.casefold().strip()):
                 questions.remove(questions[QuestionNum])
                 if (len(questions) == 0):
                     tkinter.messagebox.showinfo("Finished!!", "All the cards are finished")
@@ -226,8 +228,6 @@ def fStartSession():
 
             else:
                 tkinter.messagebox.showinfo("Nope", "This isn't the correct anser")
-                checkMessage = 0
-                return 0
        
         ##tell how many cards are left
         Question.itemconfig(feedBack, text = str(len(questions)) + " cards left")
@@ -252,7 +252,7 @@ def submit():
     newcard(side1, side2, deck)
 
 #check button
-def check():
+def check(event = None):
     global checkMessage
     global Response
 
@@ -264,8 +264,6 @@ def check():
     Response = AnswerBox.get()
 
     fStartSession()
-
-
 
 ### create entry box ####
 
@@ -369,5 +367,8 @@ RemoveCard.pack(side = 'top')
 #Create question text
 text = Question.create_text(100,50,fill="#e1924d",font="Times 20 bold", text='')
 feedBack = Question.create_text(100,180,font="Times 15", text='')
+
+#enter key
+window.bind('<Return>', check)
 
 window.mainloop()
