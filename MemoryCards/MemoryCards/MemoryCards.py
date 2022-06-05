@@ -227,7 +227,7 @@ def fStartSession():
                     return 0
 
             else:
-                tkinter.messagebox.showinfo("Nope", "This isn't the correct anser")
+                tkinter.messagebox.showinfo("Nope", "This isn't the correct anser\nThe correct solution is:\n \"" + correctAnswer + "\"")
        
         ##tell how many cards are left
         Question.itemconfig(feedBack, text = str(len(questions)) + " cards left")
@@ -264,6 +264,8 @@ def check(event = None):
     Response = AnswerBox.get()
 
     fStartSession()
+
+    AnswerBox.select_range(0,'end')
 
 ### create entry box ####
 
