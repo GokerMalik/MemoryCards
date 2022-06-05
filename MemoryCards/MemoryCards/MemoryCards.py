@@ -238,7 +238,24 @@ def fStartSession():
         correctAnswer = questions[QuestionNum][QuestionSide*(-1)+(1)]   #cross-switch between 1 and 0
 
         ## Create question card
-        Question.itemconfig(text, text = questions[QuestionNum][QuestionSide])
+        if (len(questions[QuestionNum][QuestionSide]) > 10):
+            showQuest = ''
+            wordList = questions[QuestionNum][QuestionSide].split(" ")
+            for word in wordList:
+                if (len(word) > 10):
+                    lines = int(len(word)/10) + 1
+                    pieced = ''
+                    for part in range(lines):
+                        if (part != lines-1):
+                            pieced = pieced + word[part*10:(part+1)*10] + "-\n"
+                        else:
+                            pieced = pieced + word[part*10:]
+                    word = pieced
+                showQuest = showQuest + word + "\n"
+            showQuest = showQuest[0:len(showQuest)-1]
+        else:
+            showQuest = questions[QuestionNum][QuestionSide]
+        Question.itemconfig(text, text = showQuest)
 
         checkMessage = 0
 
