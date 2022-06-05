@@ -241,18 +241,38 @@ def fStartSession():
         if (len(questions[QuestionNum][QuestionSide]) > 10):
             showQuest = ''
             wordList = questions[QuestionNum][QuestionSide].split(" ")
-            for word in wordList:
-                if (len(word) > 10):
-                    lines = int(len(word)/10) + 1
-                    pieced = ''
-                    for part in range(lines):
-                        if (part != lines-1):
-                            pieced = pieced + word[part*10:(part+1)*10] + "-\n"
+            splitList = []
+
+            print(wordList)
+            
+            for IND in range(len(wordList)):
+                if (len(wordList[IND]) >10):
+
+                    toModify = wordList[IND]
+                    PieceNum = int(len(toModify)/10)+1
+                    wordList.remove(toModify)
+
+                    for No in range(PieceNum):
+                        if (No != PieceNum-1):
+                            toSend = toModify[No*10:(No+1)*10] + "-"
+                            wordList.insert(IND + No, toSend)
                         else:
-                            pieced = pieced + word[part*10:]
-                    word = pieced
-                showQuest = showQuest + word + "\n"
-            showQuest = showQuest[0:len(showQuest)-1]
+                            toSend = toModify[No*10:]
+                            wordList.insert(IND + No, toSend)
+            
+            splitList.append(wordList[0])
+
+            for word in wordList:
+                if (word != wordList[0]):
+                    if (len(splitList[-1] + " " + word)<=10):
+                        splitList[-1] = splitList[-1] + " " + word
+                    else:
+                        splitList.append(word)
+
+            for piece in splitList:
+                showQuest = showQuest + piece + "\n"
+            showQuest = showQuest[0:showQuest.rfind("\n")]
+
         else:
             showQuest = questions[QuestionNum][QuestionSide]
         Question.itemconfig(text, text = showQuest)
