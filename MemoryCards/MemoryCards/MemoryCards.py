@@ -75,6 +75,7 @@ FrontFrame = tkinter.Frame(ListLocation, height = 300, width = 200)
 InputFrame = tkinter.Frame(window)
 CheckFrame = tkinter.Frame(window)
 ShowHideFrame = tkinter.Frame(ListLocation, width = 200)
+sessionFrame = tkinter.Frame(CheckFrame)
 
 ### define what buttuons do ####
 
@@ -281,6 +282,21 @@ def fStartSession():
 
     return 0
 
+#endsession
+def endSession():
+    global sessionStatus
+
+    if (sessionStatus == 1):
+        sessionStatus = 0
+        Question.itemconfig(text, text = '')
+        Question.itemconfig(feedBack, text = '')
+        Question.config(bg = '#f0f0f0')
+        return 0
+    else:
+        tkinter.messagebox.showinfo("No Session", "There isn't any sesion currently going on")
+        return -1
+
+
 #submit button
 def submit():
     side1 = Entry1.get()
@@ -339,7 +355,10 @@ HideFronts = tkinter.Button(ShowHideFrame, text = "Hide Cards", command = HideFr
 RemoveCard = tkinter.Button(ListLocation, text = "Remove Card", command = RemoveCard)
 
 #StartSession button
-StartSession = tkinter.Button(CheckFrame, text = "Start Session", command = fStartSession)
+StartSession = tkinter.Button(sessionFrame, text = "Start Session", command = fStartSession)
+
+#endSession button
+endSession = tkinter.Button(sessionFrame, text = "End Session", command = endSession)
 
 #deck list
 ### Create listbox and scrollbar
@@ -371,8 +390,10 @@ FrontScroll.pack(side='right', fill='y')
 FrontList.pack(side = 'right')
 
 #locate the answer box and the check button
-StartSession.pack(side = 'bottom')
-AnswerBox.pack(side = 'left')
+sessionFrame.pack(side = 'bottom')
+endSession.pack(side = 'right')
+StartSession.pack(side = 'left')
+AnswerBox.pack(side = 'left', pady = 10)
 CheckButton.pack(side = 'right')
 
 #Locate front and back labels
