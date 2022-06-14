@@ -23,6 +23,7 @@ correctAnswer = ''
 QuestionNum = -1
 sides = [0,1]
 
+
 encoding = 'utf-8'
 
 #create a window instance
@@ -76,6 +77,7 @@ InputFrame = tkinter.Frame(window)
 CheckFrame = tkinter.Frame(window)
 ShowHideFrame = tkinter.Frame(ListLocation, width = 200)
 sessionFrame = tkinter.Frame(CheckFrame)
+FrontBackFrame = tkinter.Frame(ListLocation)
 
 ### define what buttuons do ####
 
@@ -102,7 +104,7 @@ def newcard(side1, side2, deck):
     for line in existing:
         ExistingEntries.append(list)
         if (line[2] == card.Deck and (line[0] == card.frontSide or line[1] == card.backSide)):
-            tkinter.messagebox.showinfo("Duplication", "At least one side of the card already exist in the desk")
+            tkinter.messagebox.showinfo("Duplication", "At least one side of the card already exist in the deck")
             GetExisting.close()
             return 1
 
@@ -131,7 +133,7 @@ def showFronts():
     selected = deckList.curselection()
 
     if (len(selected) == 0):
-        tkinter.messagebox.showinfo("No selection", "Please select a desk from the menu above")
+        tkinter.messagebox.showinfo("No selection", "Please select a deck from the menu above")
         return 1
     else:
         global selectedDeck
@@ -199,12 +201,19 @@ def fStartSession():
     selected = deckList.curselection()
 
     if ((len(selected) == 0) and (checkMessage == 0)):
-        tkinter.messagebox.showinfo("No selection", "Please select a desk from the list")
+        tkinter.messagebox.showinfo("No selection", "Please select a deck from the list")
         return 1
+
+    if (FrontInt.get()==0 and BackInt.get()==0):
+        tkinter.messagebox.showinfo("No Sides", "Please select the sides that you would like to be questioned")
+        return 1
+
     else:
         sessionStatus = 1
+        AskFront.config(state = 'disabled')
+        AskBack.config(state = 'disabled')
+
         if (checkMessage == 0):                         #coming from the start session button
-            Question.pack(side = 'bottom')
             Question.config(bg = '#aee1e5')
             file = open(data_dir, 'r', encoding = encoding, newline='')
             reader = csv.reader(file)
@@ -225,6 +234,8 @@ def fStartSession():
                     Question.itemconfig(text, text = '')
                     Question.itemconfig(feedBack, text = '')
                     Question.config(bg = '#f0f0f0')
+                    AskFront.config(state = 'normal')
+                    AskBack.config(state = 'normal')
                     return 0
 
             else:
@@ -235,7 +246,14 @@ def fStartSession():
 
         qIndices = list(range(0, len(questions)))
         QuestionNum = random.sample(qIndices, 1)[0]
-        QuestionSide = random.sample(sides, 1)[0]
+        
+        if (FrontInt.get() == 1 & BackInt.get() == 1):
+            QuestionSide = random.sample(sides, 1)[0]
+        elif (FrontInt.get() == 1):
+            QuestionSide = 1
+        else:
+            QuestionSide = 0
+
         correctAnswer = questions[QuestionNum][QuestionSide*(-1)+(1)]   #cross-switch between 1 and 0
 
         ## Create question card
@@ -243,8 +261,6 @@ def fStartSession():
             showQuest = ''
             wordList = questions[QuestionNum][QuestionSide].split(" ")
             splitList = []
-
-            print(wordList)
             
             for IND in range(len(wordList)):
                 if (len(wordList[IND]) >10):
@@ -291,6 +307,8 @@ def endSession():
         Question.itemconfig(text, text = '')
         Question.itemconfig(feedBack, text = '')
         Question.config(bg = '#f0f0f0')
+        AskFront.config(state = 'normal')
+        AskBack.config(state = 'normal')
         return 0
     else:
         tkinter.messagebox.showinfo("No Session", "There isn't any sesion currently going on")
@@ -335,6 +353,14 @@ Entry2 = tkinter.Entry(InputFrame)
 Entry3 = tkinter.Entry(InputFrame)
 
 ### create buttons ####
+
+#checkbox
+FrontInt = tkinter.IntVar()
+BackInt = tkinter.IntVar()
+
+AskFront = tkinter.Checkbutton(FrontBackFrame, text='Ask Front', variable = FrontInt, onvalue=1, offvalue=0)
+AskBack = tkinter.Checkbutton(FrontBackFrame, text='Ask Back', variable = BackInt, onvalue=1, offvalue=0)
+
 
 #Submit button
 SubmitButton = tkinter.Button(InputFrame,
@@ -424,9 +450,22 @@ FrontFrame.pack(side = 'top')
 #locate remove button
 RemoveCard.pack(side = 'top')
 
+#locate Front Back Frame
+FrontBackFrame.pack(side = 'top')
+
+#locate back/front checkbox
+AskFront.pack(side = 'top')
+AskBack.pack(side = 'top')
+
 #Create question text
 text = Question.create_text(100,50,fill="#e1924d",font="Times 20 bold", text='')
 feedBack = Question.create_text(100,180,font="Times 15", text='')
+
+Question.pack(side = 'bottom')
+
+Question.itemconfig(text, text = '')
+Question.itemconfig(feedBack, text = '')
+Question.config(bg = '#f0f0f0')
 
 #enter key
 window.bind('<Return>', check)
