@@ -103,8 +103,8 @@ def newcard(side1, side2, deck):
 
     for line in existing:
         ExistingEntries.append(list)
-        if (line[2] == card.Deck and (line[0] == card.frontSide or line[1] == card.backSide)):
-            tkinter.messagebox.showinfo("Duplication", "At least one side of the card already exist in the deck")
+        if (line[2] == card.Deck and (line[0] == card.frontSide and line[1] == card.backSide)):
+            tkinter.messagebox.showinfo("Duplication", "At least one side of the card must be different than any other in the desk")
             GetExisting.close()
             return 1
 
@@ -301,6 +301,7 @@ def fStartSession():
 #endsession
 def endSession():
     global sessionStatus
+    global questions
 
     if (sessionStatus == 1):
         sessionStatus = 0
@@ -309,6 +310,7 @@ def endSession():
         Question.config(bg = '#f0f0f0')
         AskFront.config(state = 'normal')
         AskBack.config(state = 'normal')
+        questions = []
         return 0
     else:
         tkinter.messagebox.showinfo("No Session", "There isn't any sesion currently going on")
