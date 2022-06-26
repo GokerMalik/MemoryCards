@@ -14,6 +14,7 @@ data_dir = main_dir + "data.csv"
 decks = {"Default"}
 
 ### Set global variables
+selectedDeckInd = []
 selectedDeck = ''
 sessionStatus = 0
 checkMessage = 0
@@ -193,14 +194,13 @@ def fStartSession():
     global correctAnswer
     global QuestionNum
     global sides
+    global selectedDeckInd
 
     if ((sessionStatus == 1) and (checkMessage == 0)):
         tkinter.messagebox.showinfo("Duplicated Sessions", "The session was already started")
         return 1
 
-    selected = deckList.curselection()
-
-    if ((len(selected) == 0) and (checkMessage == 0)):
+    if ((len(deckList.curselection()) == 0) and (checkMessage == 0)):
         tkinter.messagebox.showinfo("No selection", "Please select a deck from the list")
         return 1
 
@@ -209,22 +209,35 @@ def fStartSession():
         return 1
 
     else:
-        sessionStatus = 1
-        AskFront.config(state = 'disabled')
-        AskBack.config(state = 'disabled')
 
         if (checkMessage == 0):                         #coming from the start session button
-            Question.config(bg = '#aee1e5')
             file = open(data_dir, 'r', encoding = encoding, newline='')
             reader = csv.reader(file)
             allCards = list(reader)
             file.close()
 
             for quest in allCards:
-                if (quest[2] == deckList.get(selected)):
+                if (quest[2] == deckList.get(deckList.curselection())):
                     questions.append(quest)
 
-        else:                                               #coming from the check button
+            if len(questions) == 0:
+                tkinter.messagebox.showinfo("Empty Deck", "There is no card in the selected deck")
+                return 1
+
+            Question.config(bg = '#aee1e5')
+
+            sessionStatus = 1
+            AskFront.config(state = 'disabled')
+            AskBack.config(state = 'disabled')
+
+            selectedDeckInd = deckList.curselection()
+
+        else:                                           #coming from the check button
+
+            sessionStatus = 1
+            AskFront.config(state = 'disabled')
+            AskBack.config(state = 'disabled')
+
             if (Response.casefold().strip() == correctAnswer.casefold().strip()):
                 questions.remove(questions[QuestionNum])
                 if (len(questions) == 0):
@@ -328,17 +341,21 @@ def submit():
 def check(event = None):
     global checkMessage
     global Response
+    global selectedDeckInd
 
     if (sessionStatus == 0):
         tkinter.messagebox.showinfo("No Session", "Please first start a session")
         return 1
 
-    checkMessage = 1
-    Response = AnswerBox.get()
+    else:
+        checkMessage = 1
+        Response = AnswerBox.get()
+        AnswerBox.select_range(0,'end')
+        fStartSession()
 
-    fStartSession()
+        if (sessionStatus == 0):
+            deckList.activate(selectedDeckInd[0])
 
-    AnswerBox.select_range(0,'end')
 
 ### create entry box ####
 
