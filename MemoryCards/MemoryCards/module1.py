@@ -1,5 +1,7 @@
+from asyncio.windows_events import NULL
+from sre_parse import State
 import tkinter
-from tkinter import ttk
+from tkinter import BooleanVar, IntVar, ttk
 from tkinter import simpledialog
 from tkinter import filedialog
 import sqlite3
@@ -30,7 +32,8 @@ def CreateNewTable():
     interfaceTable.CleanTable(tName, tablePath)
 
     handleTable(interfaceTable)
-    
+
+#menu Open Table    
 def OpenTable():
 
     if (interfaceTable.sql3 == NoneType):
@@ -51,6 +54,7 @@ def OpenTable():
 
     handleTable(interfaceTable)
 
+#menu Save Table
 def SaveTable():
 
     if (interfaceTable.sql3 == NoneType):
@@ -58,65 +62,147 @@ def SaveTable():
         interfaceTable.sql3.saveTable()
         interfaceTable.disconnect()
 
-#define button activation/disactivation
-def ActiveBut(button):
+#define item activation/disactivation
+def ActiveItem(button):
     button.config(state = 'normal')
-def deActiveBut(button):
+def deActiveItem(button):
     button.config(state = 'disabled')
 
 #define hierarchy events
 def itemSelect(event):
-    ActiveBut(DelCat)
 
-    if (len(Hierarchy.selection())==0):
-        deActiveBut(DelCat)
+    deActiveItem(DelCat)
+    deActiveItem(CreateDeck)
+    CardNumLabel.config(text = "*")
 
+    selectedCats, selectedDecks = collectHierarchy()
+
+    if (len(selectedCats)!=0):
+        ActiveItem(DelCat)
+        ActiveItem(CreateDeck)
+
+    if len(selectedDecks) == 1:
+        selDeckList = list(selectedDecks.items())
+        CardNumLabel.config(text = selDeckList[0][1].cardNum)
+
+    if len(strDeckName.get()) != 0:
+        ActiveItem(CreateDeck)
+     
 #Update hierarchy Table
 def hierUpdate():
 
     for i in Hierarchy.get_children():
         Hierarchy.delete(i)
 
-    indHierarchy = -1
+    catInd = 1
     for cat in interfaceTable.cats:
-        indHierarchy += 1
-        Hierarchy.insert('', tkinter.END, text = cat, iid = indHierarchy, open = False)
-        for d, deck in interfaceTable.cats[cat].decks:
-            indHierarchy += 1
-            Hierarchy.insert('', tkinter.END, text = deck, iid = indHierarchy, open = False)
-            Hierarchy.move(indHierarchy, indHierarchy-(d+1), d)
+        Hierarchy.insert('', tkinter.END, text = cat, iid = catInd, open = True)
+        deckInd = catInd*100
+        for deck in interfaceTable.cats[cat].decks:
+            Hierarchy.insert('', tkinter.END, text = deck, iid = deckInd, open = False)
+            Hierarchy.move(deckInd, catInd, deckInd)
+            deckInd += 1
+        catInd +=1
 
-    
+#collect from hierarchy table
+def collectHierarchy():
+
+    selectedCategories = dict()
+    selectedDecks = dict()
+
+    #find a way to differentiate between cats and decks, check the function above.
+    for selectedItem in Hierarchy.selection():
+
+        item = Hierarchy.item(selectedItem)
+        parent_iid = Hierarchy.parent(selectedItem)
+
+        if parent_iid:
+            for cat in interfaceTable.cats:
+                if Hierarchy.item(parent_iid)['text'] == interfaceTable.cats[cat].nameCat:
+                    selectedCategories.update({interfaceTable.cats[cat].nameCat:interfaceTable.cats[cat]})
+                    for deck in interfaceTable.cats[cat].decks:
+                        if item['text'] == interfaceTable.cats[cat].decks[deck].nameDeck:
+                            selectedDecks.update({item['text']:interfaceTable.cats[cat].decks[deck]})
+                            break
+                    break
+        else:
+            for cat in interfaceTable.cats:
+                if item['text'] == interfaceTable.cats[cat].nameCat:
+                    selectedCategories.update({item['text']:interfaceTable.cats[cat]})
+                    break
+
+    return selectedCategories, selectedDecks
+
+#define deckNameBox events
+def DeckNameChange(deckName):
+
+    ActiveItem(CreateDeck)
+    activate = False
+
+    if len(deckName.get()) != 0:
+        selectedCats, d = collectHierarchy()
+        if len(selectedCats) == 1:
+            activate = True
+
+    if activate:
+        pass
+    else:
+        deActiveItem(CreateDeck)
 
 #Define button functions
 def newCategory():
 
     nameCategory = tkinter.simpledialog.askstring("Input", 'Category name:', parent = window)
 
-    if (nameCategory != ""):
+    if nameCategory:
         Cards.Category(nameCategory, interfaceTable)
         hierUpdate()
 
-
+#command deleteCategory
 def deleteCategory():
-    for selectedItem in Hierarchy.selection():
-        item = Hierarchy.item(selectedItem)
-        SelectedCatName = item['text']
-        interfaceTable.deleteCat(interfaceTable.cats[SelectedCatName])
+
+    selectedCats, d= collectHierarchy()
+
+    for cat in selectedCats:
+        interfaceTable.deleteCat(selectedCats[cat])
 
     hierUpdate()
-    deActiveBut(DelCat)
+    deActiveItem(DelCat)
 
-#Define frames
+#command newDeck
+def newDeck():
+
+    selectedCats, selectedDecks = collectHierarchy()
+
+    if len (selectedCats == 1):
+
+        askFr = BooleanVar(value = aFR)
+        askBc = BooleanVar(value = aBC)
+
+        Cards.Deck(selectedCats[0], strDeckName.get(), askFr, askBc)
+        hierUpdate()
+
+#command deleteDeck
+def deleteDeck():
+    pass
+
+#LeftFrame
+def setLeftFrame():
+    frameLeft = tkinter.Frame(window)
+    frameLeft.pack(side = 'left', fill = 'y')
+
+    return frameLeft
+
+#hierarchyFrame
 def SetHierarchyFrame():
 
     #create hierarchy frame
-    frameHierarchy = tkinter.Frame(window)
-    frameHierarchy.pack(side='left', fill = 'y')
+    frameHierarchy = tkinter.Frame(leftFrame)
+    frameHierarchy.pack(side='top', fill = 'y')
 
     #Create table hierarchy
     hierarchy = tkinter.ttk.Treeview(frameHierarchy)
-    hierarchy.pack(side = 'top')
+    hierarchy.pack(side = 'top', fill = 'y')
 
     #Create hiearchy buttons frame
     frameHiearchyButtons = tkinter.Frame(frameHierarchy)
@@ -124,15 +210,80 @@ def SetHierarchyFrame():
 
     #New category button
     butLeftHierarchy = tkinter.Button(frameHiearchyButtons, text = 'New Category', command = newCategory, state = 'disabled')
-    butLeftHierarchy.pack(side = 'left')
+    butLeftHierarchy.pack(side = 'left', pady = 10)
 
     #Delete category button
     butRightHierarchy = tkinter.Button(frameHiearchyButtons, text = 'Delete Category', command = deleteCategory, state = 'disabled')
-    butRightHierarchy.pack(side = 'right')
+    butRightHierarchy.pack(side = 'right', pady = 8)
 
     return hierarchy, butLeftHierarchy, butRightHierarchy
 
+#deck info frame
+def setDeckInfoFrame():
 
+    #Set deck info frame
+    frDeckInf = tkinter.Frame(leftFrame, widt = 200, height = 500, borderwidth= 3, relief= 'sunken')
+    frDeckInf.pack(side = 'top', pady = 3, fill = 'x' )
+
+    #set the nameLabelFrame
+    frDeckNamLab = tkinter.Frame(frDeckInf)
+    frDeckNamLab.pack(side = 'top', fill = 'x')
+
+    #set the name label
+    labelDeckName = tkinter.Label(frDeckNamLab, text = "Deck Name:")
+    labelDeckName.pack(side = 'left', padx = 8, pady = 3, fill = 'x')
+
+    #set the name input
+    entryDeckName = tkinter.Entry(frDeckInf, textvariable = strDeckName)
+    entryDeckName.pack(side = 'top', padx = 8, pady = 3, fill = 'x')
+
+    ############################
+    #DeckNumber#
+
+    frDeckNum = tkinter.Frame(frDeckInf)
+    frDeckNum.pack(side = 'top', fill = 'x')
+
+    labelCardNum = tkinter.Label(frDeckNum, text = "Number of cards:")
+    labelCardNum.pack(side = 'left', padx = 8, pady = 3, fill = 'x')
+
+    numCardNum = tkinter.Label(frDeckNum, text = "*")
+    numCardNum.pack(side = 'right', padx = 10)
+
+    ############################
+    #CheckBox#
+
+    #set front ask front frame
+    frameAskFront = tkinter.Frame(frDeckInf)
+    frameAskFront.pack(side = 'top', fill = 'x')
+
+    #set ask front checkbox
+    checkAskFront = tkinter.Checkbutton(frameAskFront, text = 'Ask Front', variable = aFR, onvalue=1, offvalue=0)
+    checkAskFront.pack(side = 'left', fill = 'x', padx = 5)
+
+    #set front ask front frame
+    frameAskBack = tkinter.Frame(frDeckInf)
+    frameAskBack.pack(side = 'top', fill = 'x')
+
+    #set ask back checkbox
+    checkAskBack = tkinter.Checkbutton(frameAskBack, text = 'Ask Back', variable = aBC, onvalue=1, offvalue=0)
+    checkAskBack.pack(side = 'left', fill = 'x', padx = 5)
+    
+    return entryDeckName, numCardNum, checkAskFront, checkAskBack
+
+#Deck buttons Frame
+def setDeckControlFrame():
+
+    #Deck Control Frame
+    frDeckCont = tkinter.Frame(leftFrame)
+    frDeckCont.pack(side = 'top', fill = 'x')
+
+    #newDeck button
+    newDeckButton = tkinter.Button(frDeckCont, text = "Create Deck", command = newDeck, state = 'disabled')
+    newDeckButton.pack(side = 'left')
+
+    return newDeckButton
+
+#handleTable
 def handleTable(table):
 
     #set the heading of the hieararchy table
@@ -141,28 +292,36 @@ def handleTable(table):
 
     table.connect()
 
-    #fetch the existing cards in the table
+    #fetch the existing decks in the table
+
     resCats = table.sql3.curs.execute("SELECT categoryCol FROM cats").fetchall()
-
-    if len(resCats) != 0:
-
-        for result in resCats:
-            cards.update({result[0].nameCat : result})
+    resDecks = table.sql3.curs.execute("SELECT deckCol from decks").fetchall()
 
     table.disconnect()
 
-    ActiveBut(NewCat)
+    ActiveItem(NewCat)
     hierUpdate()
 
 #Set main window
-
 window = tkinter.Tk()
+
+#Set entry box
+strDeckName = tkinter.StringVar()
+strDeckName.trace("w", lambda *args: DeckNameChange(strDeckName))
 
 #get home directory and temporary directory
 homeDir = os.path.expanduser('~')
 dirTemp = homeDir + fr'\AppData\Roaming\MemoryCards\temp'
 
+#get frames and widgets
+aFR = IntVar(value = 0)
+aBC = IntVar(value = 1)
+
+leftFrame = setLeftFrame()
+
 Hierarchy, NewCat, DelCat = SetHierarchyFrame()
+DeckNameBox, CardNumLabel, AskFrontBox, AskBackBox = setDeckInfoFrame()
+CreateDeck = setDeckControlFrame()
 
 menubar = tkinter.Menu(window)
 file_menu = tkinter.Menu(menubar, tearoff = False)
@@ -230,7 +389,7 @@ window.config(menu = menubar)
 window.geometry('500x500')
 window.title('Memory Cards')
 
-
+#Hieararchy Event
 Hierarchy.bind('<<TreeviewSelect>>', itemSelect)
 
 window.mainloop()

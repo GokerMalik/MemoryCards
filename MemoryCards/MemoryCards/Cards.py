@@ -1,8 +1,10 @@
 import sqlite3
 from types import NoneType
 
+#sqlConnection
 class sqlConnection():
 
+    #init
     def __init__ (self, table):
 
         self.table = table
@@ -30,19 +32,24 @@ class sqlConnection():
         except:
             pass
 
+    #categoryConverter
     def catConverter(self, s):
         nameCat = s.decode("utf-8")
+
         return Category(nameCat, self.table)
 
+    #deckCoverter
     def deckConverter(self, s):
 
         #category, name, front, back
-        catList = self.curs.execute("SELECT categoryCol FROM cats").fetchall()
+
         valList = s.decode("utf-8").split("::--::")
 
+        catList = self.table.cats
+
         for category in catList:
-            if valList[0] == category.nameCat:
-                deckCat = category
+            if valList[0] == catList[category].nameCat:
+                deckCat = catList[category]
                 break
 
         if valList[2] == "True":
@@ -57,7 +64,7 @@ class sqlConnection():
 
         return Deck(deckCat, valList[1], deckFront, deckBack)
 
-
+    #cardConverter
     def cardConverter(self, s):
 
         #deck, front, back
@@ -72,6 +79,7 @@ class sqlConnection():
 
         return Card(cardDeck, valList[2], valList[3])
 
+    #saveTable
     def saveTable (self):
 
         self.curs.execute("DELETE FROM cats")
@@ -87,14 +95,16 @@ class sqlConnection():
 
         self.connection.commit()
 
+    #release
     def release(self):
         del self.curs
         self.connection.close()
         del self
 
-
+#table
 class Table(object):
 
+    #init
     def __init__(self, name, path):
         self.nameTab = name
         self.path = path
@@ -104,6 +114,7 @@ class Table(object):
 
         self.sql3 = NoneType
 
+    #cleanTable
     def CleanTable(self, name, path):
 
         self.nameTab = name
@@ -126,32 +137,39 @@ class Table(object):
 
         self.catNum = 0
 
-        
-
+    #str
     def __str__(self):
         return self.nameTab
 
+    #addCat
     def addCat(self, cat):
         self.cats.update({cat.nameCat:cat})
         self.catNum += 1
 
+    #deleteCat
     def deleteCat(self, cat):
         self.cats.pop(cat.nameCat)
         self.catNum -= 1
 
+    #connect
     def connect(self):
         if (self.sql3 == NoneType):
             self.sql3 = sqlConnection(self)
-        #Check error handle needed
+            #Check error handle needed
+            pass
 
+    #diconnect
     def disconnect(self):
         if (self.sql3 != NoneType):
             self.sql3.release()
             self.sql3 = NoneType
-        #Check error handle needed
+            #Check error handle needed
+            pass
 
+#category
 class Category(Table):
 
+    #init
     def __init__(self, name, table):
 
         self.table = table
@@ -163,30 +181,34 @@ class Category(Table):
         self.decks = dict()
         table.addCat(self)
 
-
+    #str
     def __str__(self):
         return self.nameCat
 
+    #conform
     def __conform__(self, protocol):
         if protocol == sqlite3.PrepareProtocol:
             return self.sqlVal
 
+    #addDeck
     def addDeck(self, deck):
         self.decks.update({deck.nameDeck:deck})
         self.deckNum += 1
 
+    #deleteDeck
     def deleteDeck(self, deck):
         self.decks.pop(deck.nameDeck)
         self.deckNum -= 1
 
+    #release
     def release(self):
         self.table.deleteCat(self)
         del self
 
-
-
+#deck
 class Deck(Category):
 
+    #init
     def __init__(self, category, name, front, back):
         self.category = category
         self.nameDeck = name
@@ -199,28 +221,34 @@ class Deck(Category):
         self.cards = dict()
         category.addDeck(self)
 
+    #conform
     def __conform__(self, protocol):
         if protocol == sqlite3.PrepareProtocol:
             return self.sqlVal
 
+    #str
     def __str__(self):
         return self.nameDeck
 
+    #addCard
     def addCard(self, card):
         self.cards.update({card.nameCard:card})
         self.cardNum += 1
 
+    #deleteCard
     def deleteCard(self, card):
         self.cards.pop(card.nameCard)
         self.cardNum -= 1
 
+    #release
     def release(self):
         self.category.deleteDeck(self)
         del self
 
-
+#Card
 class Card(Deck):
 
+    #init
     def __init__(self, deck, front, back):
         self.nameCard = front
         self.front = front
@@ -234,13 +262,16 @@ class Card(Deck):
 
         deck.addCard(self)
 
+    #conform
     def __conform__(self, protocol):
         if protocol == sqlite3.PrepareProtocol:
             return self.sqlVal
 
+    #str
     def __str__(self):
         return self.Front
 
+    #release
     def release(self):
         self.deck.deleteCard(self)
         del self
