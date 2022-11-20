@@ -71,11 +71,51 @@ def deActiveItem(button):
 #define hierarchy events
 def itemSelect(event):
 
+    #Always strart by setting all to back their defaults.
     deActiveItem(DelCat)
     deActiveItem(CreateDeck)
-    CardNumLabel.config(text = "*")
 
+    DeckNameInfo.config(text = "No deck is selected")
+    DeckNameBox.config(state = 'disabled')
+    CardNumLabel.config(state = 'disabled', text = '*')
+    CardNum.config(state = 'disabled')
+    AskFrontBox.config(state = 'disabled')
+    AskBackBox.config(state = 'disabled')
+
+    #Get the recent list of the selection
     selectedCats, selectedDecks = collectHierarchy()
+
+    #work through scenarios
+
+    ##  NoCat NoDeck -- Keep default
+
+    ##  OneCat noDeck -- Only one selection and it is a category
+    if (len(selectedCats) == 1 and len(selectedDecks) == 0):
+        ActiveItem(DelCat)
+        ActiveItem(CreateDeck)
+
+    ##  MultiCat NoDeck -- Multiple categories but no deck selected
+    if (len(selectedCats) > 1 and len(selectedDecks) == 0):
+        ActiveItem(DelCat)
+
+    ##  NoCat OneDeck -- Not possible, selecting a deck automatically calls its cat
+
+    ##  OneCat OneDeck -- Only when the deck belongs to the category.
+    if (len(selectedCats) == 1 and len(selectedDecks) == 1):
+        ActiveItem(DelCat)
+
+
+    ##MultiCat OneDeck -- Multiple categories are selected, also one deck belongs one of them
+
+
+
+    ##NoCat MultiDeck -- Not possibble
+
+    ##OneCat MultiDeck -- All the decks belongs to the same cateogry.
+
+    ##MultiCat MultiDeck -- decks in different categories or decks in the same + at least one category diffrent than their parent.
+
+
 
     if (len(selectedCats)!=0):
         ActiveItem(DelCat)
@@ -83,7 +123,8 @@ def itemSelect(event):
 
     if len(selectedDecks) == 1:
         selDeckList = list(selectedDecks.items())
-        CardNumLabel.config(text = selDeckList[0][1].cardNum)
+        CardNum.config(text = selDeckList[0][1].cardNum)
+        DeckNameInfo.config(text = "Deck Name")
 
     if len(strDeckName.get()) != 0:
         ActiveItem(CreateDeck)
@@ -107,6 +148,7 @@ def hierUpdate():
 #collect from hierarchy table
 def collectHierarchy():
 
+    #create two dictionaries to make it sure that registering all items for once.
     selectedCategories = dict()
     selectedDecks = dict()
 
@@ -116,15 +158,21 @@ def collectHierarchy():
         item = Hierarchy.item(selectedItem)
         parent_iid = Hierarchy.parent(selectedItem)
 
+        #If it has a parent ID, then it is a deck. Otherwise, category
         if parent_iid:
+            #Scan the memory to find what category matches with the deck's parent
             for cat in interfaceTable.cats:
                 if Hierarchy.item(parent_iid)['text'] == interfaceTable.cats[cat].nameCat:
+                    #If the deck is selected, automatically count its parent.
                     selectedCategories.update({interfaceTable.cats[cat].nameCat:interfaceTable.cats[cat]})
+                    #scan the memory to see what which deck in the category makes a match with the selection
                     for deck in interfaceTable.cats[cat].decks:
                         if item['text'] == interfaceTable.cats[cat].decks[deck].nameDeck:
+                            #register the deck
                             selectedDecks.update({item['text']:interfaceTable.cats[cat].decks[deck]})
                             break
                     break
+        #if it doesn't have a parent ID, then it must be a category. Register the selection.
         else:
             for cat in interfaceTable.cats:
                 if item['text'] == interfaceTable.cats[cat].nameCat:
@@ -169,6 +217,10 @@ def deleteCategory():
     hierUpdate()
     deActiveItem(DelCat)
 
+#command modifyCategory
+def modifyCategory():
+    pass
+
 #command newDeck
 def newDeck():
 
@@ -181,6 +233,10 @@ def newDeck():
 
         Cards.Deck(selectedCats[0], strDeckName.get(), askFr, askBc)
         hierUpdate()
+
+#command modifyDeck
+def modifyDeck():
+    pass
 
 #command deleteDeck
 def deleteDeck():
@@ -204,22 +260,42 @@ def SetHierarchyFrame():
     hierarchy = tkinter.ttk.Treeview(frameHierarchy)
     hierarchy.pack(side = 'top', fill = 'y')
 
+    #Create label frame
+    labCatsFrame = tkinter.Frame(frameHierarchy)
+    labCatsFrame.pack(side = 'top', fill = 'x')
+
+    #Label cateogr buttons
+    labCategories = tkinter.Label(labCatsFrame, text = 'Categories:')
+    labCategories.pack(side = 'left')
+
     #Create hiearchy buttons frame
     frameHiearchyButtons = tkinter.Frame(frameHierarchy)
-    frameHiearchyButtons.pack(side = 'top')
+    frameHiearchyButtons.pack(side = 'top', fill = 'x')
 
     #New category button
-    butLeftHierarchy = tkinter.Button(frameHiearchyButtons, text = 'New Category', command = newCategory, state = 'disabled')
-    butLeftHierarchy.pack(side = 'left', pady = 10)
+    butNewCat = tkinter.Button(frameHiearchyButtons, text = 'Category', command = newCategory, state = 'disabled')
+    butNewCat.pack(side = 'left', pady = 10, padx = 3)
 
     #Delete category button
-    butRightHierarchy = tkinter.Button(frameHiearchyButtons, text = 'Delete Category', command = deleteCategory, state = 'disabled')
-    butRightHierarchy.pack(side = 'right', pady = 8)
+    butDelCat = tkinter.Button(frameHiearchyButtons, text = 'Delete', command = deleteCategory, state = 'disabled')
+    butDelCat.pack(side = 'left', pady = 8, padx = 3)
 
-    return hierarchy, butLeftHierarchy, butRightHierarchy
+    #Modify category button
+    butModCat = tkinter.Button(frameHiearchyButtons, text = 'Modify', command = modifyCategory, state = 'disabled')
+    butModCat.pack(side = 'left', pady = 8, padx = 3)
+
+    return hierarchy, butNewCat, butDelCat, butModCat
 
 #deck info frame
 def setDeckInfoFrame():
+
+    #Set deckinfLab frame
+    FrDeckInfLab = tkinter.Frame(leftFrame)
+    FrDeckInfLab.pack(side = 'top', fill = 'x')
+
+    #set decks label
+    DeckInfLab = tkinter.Label(FrDeckInfLab, text = 'Decks:')
+    DeckInfLab.pack(side = 'left')
 
     #Set deck info frame
     frDeckInf = tkinter.Frame(leftFrame, widt = 200, height = 500, borderwidth= 3, relief= 'sunken')
@@ -230,11 +306,11 @@ def setDeckInfoFrame():
     frDeckNamLab.pack(side = 'top', fill = 'x')
 
     #set the name label
-    labelDeckName = tkinter.Label(frDeckNamLab, text = "Deck Name:")
+    labelDeckName = tkinter.Label(frDeckNamLab, text = "No deck is selected")
     labelDeckName.pack(side = 'left', padx = 8, pady = 3, fill = 'x')
 
     #set the name input
-    entryDeckName = tkinter.Entry(frDeckInf, textvariable = strDeckName)
+    entryDeckName = tkinter.Entry(frDeckInf, textvariable = strDeckName, state = 'disabled')
     entryDeckName.pack(side = 'top', padx = 8, pady = 3, fill = 'x')
 
     ############################
@@ -243,10 +319,10 @@ def setDeckInfoFrame():
     frDeckNum = tkinter.Frame(frDeckInf)
     frDeckNum.pack(side = 'top', fill = 'x')
 
-    labelCardNum = tkinter.Label(frDeckNum, text = "Number of cards:")
+    labelCardNum = tkinter.Label(frDeckNum, text = "Number of cards:", state = 'disabled')
     labelCardNum.pack(side = 'left', padx = 8, pady = 3, fill = 'x')
 
-    numCardNum = tkinter.Label(frDeckNum, text = "*")
+    numCardNum = tkinter.Label(frDeckNum, text = "*", state = 'disabled')
     numCardNum.pack(side = 'right', padx = 10)
 
     ############################
@@ -257,7 +333,7 @@ def setDeckInfoFrame():
     frameAskFront.pack(side = 'top', fill = 'x')
 
     #set ask front checkbox
-    checkAskFront = tkinter.Checkbutton(frameAskFront, text = 'Ask Front', variable = aFR, onvalue=1, offvalue=0)
+    checkAskFront = tkinter.Checkbutton(frameAskFront, text = 'Ask Front', variable = aFR, onvalue=1, offvalue=0, state = 'disabled')
     checkAskFront.pack(side = 'left', fill = 'x', padx = 5)
 
     #set front ask front frame
@@ -265,10 +341,10 @@ def setDeckInfoFrame():
     frameAskBack.pack(side = 'top', fill = 'x')
 
     #set ask back checkbox
-    checkAskBack = tkinter.Checkbutton(frameAskBack, text = 'Ask Back', variable = aBC, onvalue=1, offvalue=0)
+    checkAskBack = tkinter.Checkbutton(frameAskBack, text = 'Ask Back', variable = aBC, onvalue=1, offvalue=0, state = 'disabled')
     checkAskBack.pack(side = 'left', fill = 'x', padx = 5)
     
-    return entryDeckName, numCardNum, checkAskFront, checkAskBack
+    return labelDeckName, entryDeckName, labelCardNum, numCardNum, checkAskFront, checkAskBack
 
 #Deck buttons Frame
 def setDeckControlFrame():
@@ -281,7 +357,11 @@ def setDeckControlFrame():
     newDeckButton = tkinter.Button(frDeckCont, text = "Create Deck", command = newDeck, state = 'disabled')
     newDeckButton.pack(side = 'left')
 
-    return newDeckButton
+    #ModfiyDeck Button
+    modifyDeckButton = tkinter.Button(frDeckCont, text = "Modify Deck", command = modifyDeck, state = 'disabled')
+    modifyDeckButton.pack(side = 'left')
+
+    return newDeckButton, modifyDeck
 
 #handleTable
 def handleTable(table):
@@ -319,9 +399,9 @@ aBC = IntVar(value = 1)
 
 leftFrame = setLeftFrame()
 
-Hierarchy, NewCat, DelCat = SetHierarchyFrame()
-DeckNameBox, CardNumLabel, AskFrontBox, AskBackBox = setDeckInfoFrame()
-CreateDeck = setDeckControlFrame()
+Hierarchy, NewCat, DelCat, ModCat = SetHierarchyFrame()
+DeckNameInfo, DeckNameBox, CardNumLabel, CardNum, AskFrontBox, AskBackBox = setDeckInfoFrame()
+CreateDeck, EditDeck = setDeckControlFrame()
 
 menubar = tkinter.Menu(window)
 file_menu = tkinter.Menu(menubar, tearoff = False)
@@ -386,7 +466,7 @@ menubar.add_cascade(
 )
 
 window.config(menu = menubar)
-window.geometry('500x500')
+window.geometry('600x550')
 window.title('Memory Cards')
 
 #Hieararchy Event
