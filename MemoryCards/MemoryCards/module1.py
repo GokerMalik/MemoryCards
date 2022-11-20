@@ -73,58 +73,197 @@ def itemSelect(event):
 
     #Always strart by setting all to back their defaults.
     deActiveItem(DelCat)
-    deActiveItem(CreateDeck)
+    deActiveItem(ModCat)
 
+    deActiveItem(CreateDeck)
+    deActiveItem(DeleteDeck)
+    deActiveItem(ModifyDeck)
+
+    strDeckName.set("")
     DeckNameInfo.config(text = "No deck is selected")
     DeckNameBox.config(state = 'disabled')
-    CardNumLabel.config(state = 'disabled', text = '*')
-    CardNum.config(state = 'disabled')
+    CardNumLabel.config(state = 'disabled', text = 'Number of cards:')
+    CardNum.config(state = 'disabled', text = "*")
     AskFrontBox.config(state = 'disabled')
     AskBackBox.config(state = 'disabled')
 
     #Get the recent list of the selection
-    selectedCats, selectedDecks = collectHierarchy()
+    selectedCats, calledCats, selectedDecks = collectHierarchy()
 
     #work through scenarios
 
-    ##  NoCat NoDeck -- Keep default
+    ##  NoCatSelection - NoCatCall - NoDeck
+    #Keep default
 
-    ##  OneCat noDeck -- Only one selection and it is a category
-    if (len(selectedCats) == 1 and len(selectedDecks) == 0):
+    ##  OneCatSelection - NoCatCall - noDeck ::
+    if (len(selectedCats) == 1 and len(calledCats) == 0 and len(selectedDecks) == 0):
         ActiveItem(DelCat)
+        ActiveItem(ModCat)
+
         ActiveItem(CreateDeck)
 
-    ##  MultiCat NoDeck -- Multiple categories but no deck selected
-    if (len(selectedCats) > 1 and len(selectedDecks) == 0):
+    ##  MultiCatSelection - NoCatCall - NoDeck ::
+    if (len(selectedCats) > 1 and len(calledCats) == 0 and len(selectedDecks) == 0):
         ActiveItem(DelCat)
 
-    ##  NoCat OneDeck -- Not possible, selecting a deck automatically calls its cat
+    ####################################################
 
-    ##  OneCat OneDeck -- Only when the deck belongs to the category.
-    if (len(selectedCats) == 1 and len(selectedDecks) == 1):
-        ActiveItem(DelCat)
-
-
-    ##MultiCat OneDeck -- Multiple categories are selected, also one deck belongs one of them
-
-
-
-    ##NoCat MultiDeck -- Not possibble
-
-    ##OneCat MultiDeck -- All the decks belongs to the same cateogry.
-
-    ##MultiCat MultiDeck -- decks in different categories or decks in the same + at least one category diffrent than their parent.
-
-
-
-    if (len(selectedCats)!=0):
-        ActiveItem(DelCat)
+    ##  NoCatSelection - OneCatCall - OneDeck ::
+    if (len(selectedCats) == 0 and len(calledCats) == 1 and len(selectedDecks) == 1):
         ActiveItem(CreateDeck)
+        ActiveItem(DeleteDeck)
+        ActiveItem(ModifyDeck)
 
-    if len(selectedDecks) == 1:
-        selDeckList = list(selectedDecks.items())
-        CardNum.config(text = selDeckList[0][1].cardNum)
-        DeckNameInfo.config(text = "Deck Name")
+        strDeckName.set(list(selectedDecks.values())[0].nameDeck)
+        DeckNameInfo.config(text = "Deck Name:")
+        DeckNameBox.config(state = 'normal')
+        CardNumLabel.config(state = 'normal')
+        CardNum.config(state = 'normal', text = list(selectedDecks.values())[0].cardNum )
+        AskFrontBox.config(state = 'normal')
+        AskBackBox.config(state = 'normal')
+
+    ##  OneCatSelection - OneCatCall - OneDeck ::
+    if (len(selectedCats) == 1 and len(calledCats) == 1 and len(selectedDecks) == 1):
+
+        ###What if the selected cat is the parent of the selected decks
+
+        if list(calledCats.values())[0] == list(calledCats.values())[0]:
+            ActiveItem(ModCat)
+            ActiveItem(CreateDeck)
+        else:
+            ActiveItem(ModifyDeck)
+
+        ActiveItem(DelCat)
+        ActiveItem(DeleteDeck)
+
+        strDeckName.set(list(selectedDecks.values())[0].nameDeck)
+        DeckNameInfo.config(text = "Deck Name:")
+        DeckNameBox.config(state = 'normal')
+        CardNumLabel.config(state = 'normal')
+        CardNum.config(state = 'normal', text = list(selectedDecks.values())[0].cardNum )
+        AskFrontBox.config(state = 'normal')
+        AskBackBox.config(state = 'normal')
+
+    ##  MultiCatSelection - OneCatCall - OneDeck ::
+
+    if (len(selectedCats) == 1 and len(calledCats) == 1 and len(selectedDecks) == 1):
+
+        ActiveItem(DelCat)
+
+        ActiveItem(DeleteDeck)
+        ActiveItem(ModifyDeck)
+
+        strDeckName.set(list(selectedDecks.values())[0].nameDeck)
+        DeckNameInfo.config(text = "Deck Name:")
+        DeckNameBox.config(state = 'normal')
+        CardNumLabel.config(state = 'normal')
+        CardNum.config(state = 'normal', text = list(selectedDecks.values())[0].cardNum )
+        AskFrontBox.config(state = 'normal')
+        AskBackBox.config(state = 'normal')
+
+    #####################################################
+
+    ##  NoCatSelection - OneCatCall - MultiDeck ::
+
+    if (len(selectedCats) == 0 and len(calledCats) == 1 and len(selectedDecks) > 1):
+
+        ActiveItem(CreateDeck)
+        ActiveItem(DeleteDeck)
+        ActiveItem(ModifyDeck)
+
+        strDeckName.set("Multiple")
+        DeckNameInfo.config(text = "Deck Name:")
+        CardNumLabel.config(state = 'normal', text = 'Number of cards:')
+        CardNum.config(state = 'disabled', text = "Multiple")
+   
+    ##  OneCatSelection - OneCatCall - MultiDeck ::
+    '''
+    ActiveItem(DelCat)
+    ActiveItem(ModCat)
+
+    ActiveItem(DeleteDeck)
+
+    strDeckName.set("Multiple")
+    DeckNameInfo.config(text = "Deck Name:")
+    CardNumLabel.config(state = 'normal', text = 'Number of cards:')
+    CardNum.config(state = 'disabled', text = "Multiple")
+    '''
+    ##  MultiCatSelection - OneCatCall - MultiDeck ::
+
+    '''
+    deActiveItem(DelCat)
+    deActiveItem(ModCat)
+
+    deActiveItem(CreateDeck)
+    deActiveItem(DeleteDeck)
+    deActiveItem(ModifyDeck)
+
+    strDeckName.set("")
+    DeckNameInfo.config(text = "No deck is selected")
+    DeckNameBox.config(state = 'disabled')
+    CardNumLabel.config(state = 'disabled', text = 'Number of cards:')
+    CardNum.config(state = 'disabled', text = "*")
+    AskFrontBox.config(state = 'disabled')
+    AskBackBox.config(state = 'disabled')
+    '''
+
+    ##  NoCatSelection - MultiCatCall - MultiDeck ::
+
+    '''
+    deActiveItem(DelCat)
+    deActiveItem(ModCat)
+
+    deActiveItem(CreateDeck)
+    deActiveItem(DeleteDeck)
+    deActiveItem(ModifyDeck)
+
+    strDeckName.set("")
+    DeckNameInfo.config(text = "No deck is selected")
+    DeckNameBox.config(state = 'disabled')
+    CardNumLabel.config(state = 'disabled', text = 'Number of cards:')
+    CardNum.config(state = 'disabled', text = "*")
+    AskFrontBox.config(state = 'disabled')
+    AskBackBox.config(state = 'disabled')
+    '''
+
+    ##  OneCatSelection - MultiCatCall - MultiDeck ::
+
+    '''
+    deActiveItem(DelCat)
+    deActiveItem(ModCat)
+
+    deActiveItem(CreateDeck)
+    deActiveItem(DeleteDeck)
+    deActiveItem(ModifyDeck)
+
+    strDeckName.set("")
+    DeckNameInfo.config(text = "No deck is selected")
+    DeckNameBox.config(state = 'disabled')
+    CardNumLabel.config(state = 'disabled', text = 'Number of cards:')
+    CardNum.config(state = 'disabled', text = "*")
+    AskFrontBox.config(state = 'disabled')
+    AskBackBox.config(state = 'disabled')
+    '''
+
+    ##  MultiCatSelection - MultiCatCall - MultiDeck ::
+
+    '''
+    deActiveItem(DelCat)
+    deActiveItem(ModCat)
+
+    deActiveItem(CreateDeck)
+    deActiveItem(DeleteDeck)
+    deActiveItem(ModifyDeck)
+
+    strDeckName.set("")
+    DeckNameInfo.config(text = "No deck is selected")
+    DeckNameBox.config(state = 'disabled')
+    CardNumLabel.config(state = 'disabled', text = 'Number of cards:')
+    CardNum.config(state = 'disabled', text = "*")
+    AskFrontBox.config(state = 'disabled')
+    AskBackBox.config(state = 'disabled')
+    '''
+
 
     if len(strDeckName.get()) != 0:
         ActiveItem(CreateDeck)
@@ -150,6 +289,7 @@ def collectHierarchy():
 
     #create two dictionaries to make it sure that registering all items for once.
     selectedCategories = dict()
+    calledCategories = dict()
     selectedDecks = dict()
 
     #find a way to differentiate between cats and decks, check the function above.
@@ -163,8 +303,8 @@ def collectHierarchy():
             #Scan the memory to find what category matches with the deck's parent
             for cat in interfaceTable.cats:
                 if Hierarchy.item(parent_iid)['text'] == interfaceTable.cats[cat].nameCat:
-                    #If the deck is selected, automatically count its parent.
-                    selectedCategories.update({interfaceTable.cats[cat].nameCat:interfaceTable.cats[cat]})
+                    #If the deck is selected, call its parent.
+                    calledCategories.update({interfaceTable.cats[cat].nameCat:interfaceTable.cats[cat]})
                     #scan the memory to see what which deck in the category makes a match with the selection
                     for deck in interfaceTable.cats[cat].decks:
                         if item['text'] == interfaceTable.cats[cat].decks[deck].nameDeck:
@@ -179,7 +319,7 @@ def collectHierarchy():
                     selectedCategories.update({item['text']:interfaceTable.cats[cat]})
                     break
 
-    return selectedCategories, selectedDecks
+    return selectedCategories, calledCategories, selectedDecks
 
 #define deckNameBox events
 def DeckNameChange(deckName):
@@ -187,15 +327,22 @@ def DeckNameChange(deckName):
     ActiveItem(CreateDeck)
     activate = False
 
+    totalCats = dict()
+
     if len(deckName.get()) != 0:
-        selectedCats, d = collectHierarchy()
-        if len(selectedCats) == 1:
+        selectedCats, calledCats, d = collectHierarchy()
+        totalCats.update(selectedCats)
+        totalCats.update(calledCats)
+
+        if len(totalCats) == 1:
             activate = True
 
     if activate:
         pass
     else:
         deActiveItem(CreateDeck)
+
+    return deckName
 
 #Define button functions
 def newCategory():
@@ -209,7 +356,7 @@ def newCategory():
 #command deleteCategory
 def deleteCategory():
 
-    selectedCats, d= collectHierarchy()
+    selectedCats, cc, d= collectHierarchy()
 
     for cat in selectedCats:
         interfaceTable.deleteCat(selectedCats[cat])
@@ -224,14 +371,17 @@ def modifyCategory():
 #command newDeck
 def newDeck():
 
-    selectedCats, selectedDecks = collectHierarchy()
+    selectedCats, calledCats, selectedDecks = collectHierarchy()
+    totalCats = dict()
+    totalCats.update(selectedCats)
+    totalCats.update(calledCats)
 
-    if len (selectedCats == 1):
+    if len (totalCats == 1):
 
         askFr = BooleanVar(value = aFR)
         askBc = BooleanVar(value = aBC)
 
-        Cards.Deck(selectedCats[0], strDeckName.get(), askFr, askBc)
+        Cards.Deck(totalCats[0], strDeckName.get(), askFr, askBc)
         hierUpdate()
 
 #command modifyDeck
@@ -273,16 +423,16 @@ def SetHierarchyFrame():
     frameHiearchyButtons.pack(side = 'top', fill = 'x')
 
     #New category button
-    butNewCat = tkinter.Button(frameHiearchyButtons, text = 'Category', command = newCategory, state = 'disabled')
-    butNewCat.pack(side = 'left', pady = 10, padx = 3)
+    butNewCat = tkinter.Button(frameHiearchyButtons, text = 'Create', command = newCategory, state = 'disabled')
+    butNewCat.pack(side = 'left', pady = 5, padx = 3)
 
     #Delete category button
     butDelCat = tkinter.Button(frameHiearchyButtons, text = 'Delete', command = deleteCategory, state = 'disabled')
-    butDelCat.pack(side = 'left', pady = 8, padx = 3)
+    butDelCat.pack(side = 'left', pady = 5, padx = 3)
 
     #Modify category button
     butModCat = tkinter.Button(frameHiearchyButtons, text = 'Modify', command = modifyCategory, state = 'disabled')
-    butModCat.pack(side = 'left', pady = 8, padx = 3)
+    butModCat.pack(side = 'left', pady = 5, padx = 3)
 
     return hierarchy, butNewCat, butDelCat, butModCat
 
@@ -354,14 +504,18 @@ def setDeckControlFrame():
     frDeckCont.pack(side = 'top', fill = 'x')
 
     #newDeck button
-    newDeckButton = tkinter.Button(frDeckCont, text = "Create Deck", command = newDeck, state = 'disabled')
-    newDeckButton.pack(side = 'left')
+    newDeckButton = tkinter.Button(frDeckCont, text = "Create", command = newDeck, state = 'disabled')
+    newDeckButton.pack(side = 'left', padx = 3, pady = 5)
+
+    #DeleteDeck button
+    deleteDeckButton = tkinter.Button(frDeckCont, text = "Delete", command = deleteDeck, state = 'disabled')
+    deleteDeckButton.pack(side = 'left', padx = 3, pady = 5)
 
     #ModfiyDeck Button
-    modifyDeckButton = tkinter.Button(frDeckCont, text = "Modify Deck", command = modifyDeck, state = 'disabled')
-    modifyDeckButton.pack(side = 'left')
+    modifyDeckButton = tkinter.Button(frDeckCont, text = "Modify", command = modifyDeck, state = 'disabled')
+    modifyDeckButton.pack(side = 'left', padx = 3, pady = 5)
 
-    return newDeckButton, modifyDeck
+    return newDeckButton, deleteDeckButton, modifyDeckButton
 
 #handleTable
 def handleTable(table):
@@ -401,7 +555,7 @@ leftFrame = setLeftFrame()
 
 Hierarchy, NewCat, DelCat, ModCat = SetHierarchyFrame()
 DeckNameInfo, DeckNameBox, CardNumLabel, CardNum, AskFrontBox, AskBackBox = setDeckInfoFrame()
-CreateDeck, EditDeck = setDeckControlFrame()
+CreateDeck, DeleteDeck, ModifyDeck = setDeckControlFrame()
 
 menubar = tkinter.Menu(window)
 file_menu = tkinter.Menu(menubar, tearoff = False)
