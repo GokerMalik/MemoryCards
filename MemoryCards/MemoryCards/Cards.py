@@ -197,6 +197,9 @@ class Category(Table):
         self.decks = dict()
         table.addCat(self)
 
+    def updateDict(self, cat, newName):
+        pass
+
     #str
     def __str__(self):
         return self.nameCat
@@ -250,6 +253,21 @@ class Deck(Category):
     #str
     def __str__(self):
         return self.nameDeck
+
+    def update(self, newCategory, newName, newFront, newBack):
+
+        if self.category != newCategory:
+            pass
+
+        if newName != self.nameCat:
+            self.category.updateDict(self, newName)
+            self.nameCat = newName
+
+        self.askFront = newFront
+        self.askBack = newBack
+
+
+
 
     #addCard
     def addCard(self, card):
