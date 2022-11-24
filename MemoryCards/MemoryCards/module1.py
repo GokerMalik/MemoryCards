@@ -270,7 +270,9 @@ def hierUpdate():
 #collect from hierarchy table
 def collectHierarchy():
 
-    #create two dictionaries to make it sure that registering all items for once.
+
+
+    #create three dictionaries to make it sure that registering all items for once.
     selectedCategories = dict()
     calledCategories = dict()
     selectedDecks = dict()
@@ -349,7 +351,18 @@ def deleteCategory():
 
 #command modifyCategory
 def modifyCategory():
-    pass
+
+    nameCategory = tkinter.simpledialog.askstring("Input", 'Category name:', parent = window)
+
+    if len(nameCategory) > 0:
+
+        selectedCats, cc, d = collectHierarchy()
+
+        cat = list(selectedCats.values())[0]
+        cat.UpdateCat(nameCategory)
+
+    hierUpdate()
+
 
 #command newDeck
 def newDeck():

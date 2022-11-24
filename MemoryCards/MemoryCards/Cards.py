@@ -114,6 +114,22 @@ class Table(object):
 
         self.sql3 = NoneType
 
+    def updateDict(self, cat, nameCat):
+
+        catKeys = list(self.cats.keys())
+        catVals = list(self.cats.values())
+
+        newCats = dict()
+
+        for i in range(len(catKeys)):
+
+            if cat == catVals[i]:
+                newCats.update({nameCat:cat})
+            else:
+                newCats.update({catKeys[i]:catVals[i]})
+
+        self.cats = newCats
+
     #cleanTable
     def CleanTable(self, name, path):
 
@@ -189,6 +205,11 @@ class Category(Table):
     def __conform__(self, protocol):
         if protocol == sqlite3.PrepareProtocol:
             return self.sqlVal
+
+    #Update
+    def UpdateCat (self, newName):
+        self.table.updateDict(self, newName)
+        self.nameCat = newName
 
     #addDeck
     def addDeck(self, deck):
