@@ -270,8 +270,6 @@ def hierUpdate():
 #collect from hierarchy table
 def collectHierarchy():
 
-
-
     #create three dictionaries to make it sure that registering all items for once.
     selectedCategories = dict()
     calledCategories = dict()
@@ -329,7 +327,10 @@ def DeckNameChange(deckName):
 
     return deckName
 
-#Define button functions
+
+
+
+#command newCategory
 def newCategory():
 
     nameCategory = tkinter.simpledialog.askstring("Input", 'Category name:', parent = window)
@@ -364,6 +365,8 @@ def modifyCategory():
     hierUpdate()
 
 
+
+
 #command newDeck
 def newDeck():
 
@@ -380,7 +383,14 @@ def newDeck():
 
 #command modifyDeck
 def modifyDeck():
-    pass
+
+    sc, cc, selectedDecks = collectHierarchy()
+
+    askFr = BooleanVar(value = aFR.get())
+    askBc = BooleanVar(value = aBC.get())
+
+    deck = list(selectedDecks.values())[0]
+    deck.updateDeck(deck.category, strDeckName.get(), askFr, askBc)
 
 #command deleteDeck
 def deleteDeck():
@@ -392,12 +402,47 @@ def deleteDeck():
 
     hierUpdate()
 
+
+
+
+#command newCard
+def newCard():
+
+    pass
+
+#command deleteCard
+def deleteCategory():
+
+    pass
+
+#command modifyCard
+def modifyCategory():
+
+    pass
+
+
+
+
 #LeftFrame
 def setLeftFrame():
     frameLeft = tkinter.Frame(window)
     frameLeft.pack(side = 'left', fill = 'y')
 
     return frameLeft
+
+#RightFrame
+def setRightFrame():
+    frameRight = tkinter.Frame(window)
+    frameRight.pack(side = 'right', fill = 'y')
+
+    return frameRight
+
+#MidFrame
+def setMidFrame():
+    frameMid = tkinter.Frame(window)
+    frameMid.pack(side = 'top', fill = 'both')
+
+    return frameMid
 
 #hierarchyFrame
 def SetHierarchyFrame():
@@ -406,17 +451,17 @@ def SetHierarchyFrame():
     frameHierarchy = tkinter.Frame(leftFrame)
     frameHierarchy.pack(side='top', fill = 'y')
 
-    #Create table hierarchy
-    hierarchy = tkinter.ttk.Treeview(frameHierarchy)
-    hierarchy.pack(side = 'top', fill = 'y')
-
     #Create label frame
     labCatsFrame = tkinter.Frame(frameHierarchy)
     labCatsFrame.pack(side = 'top', fill = 'x')
 
-    #Label cateogr buttons
+    #Label category buttons
     labCategories = tkinter.Label(labCatsFrame, text = 'Categories:')
     labCategories.pack(side = 'left')
+
+    #Create table hierarchy
+    hierarchy = tkinter.ttk.Treeview(frameHierarchy)
+    hierarchy.pack(side = 'top', fill = 'y')
 
     #Create hiearchy buttons frame
     frameHiearchyButtons = tkinter.Frame(frameHierarchy)
@@ -444,7 +489,7 @@ def setDeckInfoFrame():
     FrDeckInfLab.pack(side = 'top', fill = 'x')
 
     #set decks label
-    DeckInfLab = tkinter.Label(FrDeckInfLab, text = 'Decks:')
+    DeckInfLab = tkinter.Label(FrDeckInfLab, text = 'Deck Info:')
     DeckInfLab.pack(side = 'left')
 
     #Set deck info frame
@@ -517,6 +562,99 @@ def setDeckControlFrame():
 
     return newDeckButton, deleteDeckButton, modifyDeckButton
 
+#Card Frame
+def setCardFrame():
+
+    labCardsFrame = tkinter.Frame(rightFrame)
+    labCardsFrame.pack(side = 'top', fill = 'x')
+
+    frameCards = tkinter.Frame(rightFrame)
+    frameCards.pack(side = 'top', fill = 'y')
+
+    labelCards = tkinter.Label(labCardsFrame, text = 'Cards:')
+    labelCards.pack(side = 'left')
+
+    CardList = tkinter.ttk.Treeview(frameCards)
+    CardList.pack(side = 'top', fill = 'y')
+
+    return CardList
+
+#card info frame
+def setCardInfoFrame():
+    #Set cardinfLab frame
+    FrCardInfLab = tkinter.Frame(rightFrame)
+    FrCardInfLab.pack(side = 'top', fill = 'x')
+
+    #set cards label
+    CardInfLab = tkinter.Label(FrCardInfLab, text = 'Card Info:')
+    CardInfLab.pack(side = 'left')
+
+    #Set cards info frame
+    frCardInf = tkinter.Frame(rightFrame, widt = 200, height = 500, borderwidth= 3, relief= 'sunken')
+    frCardInf.pack(side = 'top', pady = 3, fill = 'x' )
+
+    #set the frame for front labels
+    frCardFrontLabel = tkinter.Frame(frCardInf)
+    frCardFrontLabel.pack(side = 'top', fill = 'x')
+
+    labelCardFront = tkinter.Label(frCardFrontLabel, text = "Card Front:")
+    labelCardFront.pack(side = 'left', padx = 8, pady = 3)
+
+    #set the frame for front entries
+    frCardFrontEntry = tkinter.Frame(frCardInf)
+    frCardFrontEntry.pack(side = 'top', fill = 'x')
+
+    entryCardFront = tkinter.Text(frCardFrontEntry, state = 'disabled', height = 2, width = 20)
+    entryCardFront.pack(side = 'left', padx = 8, pady = 3)
+
+    #set the name label
+    frCardBackLabel = tkinter.Frame(frCardInf)
+    frCardBackLabel.pack(side = 'top', fill = 'x')
+
+    entryCardBack = tkinter.Label(frCardBackLabel, text = "Card Back:")
+    entryCardBack.pack(side = 'left', padx = 8, pady = 3, fill = 'x')
+
+    #set the name input
+    frCardBackEntry = tkinter.Frame(frCardInf)
+    frCardBackEntry.pack(side = 'top', fill = 'x')
+
+    entryCardBack = tkinter.Text(frCardBackEntry, state = 'disabled', height = 2, width = 20)
+    entryCardBack.pack(side = 'left', padx = 8, pady = 3)
+
+    #########################################
+
+    frCardTogs = tkinter.Frame(frCardInf)
+    frCardTogs.pack(side = 'top', fill = 'x')
+
+    #ShowFronts
+    FrontTogBut = tkinter.Button(frCardTogs, text = 'Show Fronts')
+    FrontTogBut.pack(side = 'left', padx = 3, pady = 5)
+
+    #ShowBacks
+    BackTogBut = tkinter.Button(frCardTogs, text = 'Show Backs')
+    BackTogBut.pack(side = 'left', padx = 3, pady = 5)
+
+    #########################################
+
+    frCardBut = tkinter.Frame(rightFrame)
+    frCardBut.pack(side = 'top', fill = 'x')
+
+    CreateBut = tkinter.Button(frCardBut, text = 'Create')
+    CreateBut.pack(side = 'left', fill = 'x', pady = 5, padx = 3)
+
+    DelBut = tkinter.Button(frCardBut, text = 'Delete')
+    DelBut.pack(side = 'left', fill = 'x', pady = 5, padx = 3)
+
+    ModBut = tkinter.Button(frCardBut, text = 'Modify')
+    ModBut.pack(side = 'left', fill = 'x', pady = 5, padx = 3)
+
+    return labelCardFront
+
+#sessionFrame
+def setSessionFrame():
+    Question = tkinter.Canvas(midFrame, bg = '#aee1e5', height = 200, width = 300)
+    Question.pack(side = 'top', padx = 20, pady = 15)
+
 #handleTable
 def handleTable(table):
 
@@ -536,6 +674,7 @@ def handleTable(table):
     ActiveItem(NewCat)
     hierUpdate()
 
+
 #Set main window
 window = tkinter.Tk()
 
@@ -551,11 +690,23 @@ dirTemp = homeDir + fr'\AppData\Roaming\MemoryCards\temp'
 aFR = IntVar(value = 0)
 aBC = IntVar(value = 1)
 
+#set left frame
 leftFrame = setLeftFrame()
 
 Hierarchy, NewCat, DelCat, ModCat = SetHierarchyFrame()
 DeckNameInfo, DeckNameBox, CardNumLabel, CardNum, AskFrontBox, AskBackBox = setDeckInfoFrame()
 CreateDeck, DeleteDeck, ModifyDeck = setDeckControlFrame()
+
+#set right framwe
+rightFrame = setRightFrame()
+
+CardList = setCardFrame()
+CardNameInfo = setCardInfoFrame()
+
+#setMidFrame
+midFrame = setMidFrame()
+
+setSessionFrame()
 
 menubar = tkinter.Menu(window)
 file_menu = tkinter.Menu(menubar, tearoff = False)
@@ -620,7 +771,7 @@ menubar.add_cascade(
 )
 
 window.config(menu = menubar)
-window.geometry('600x550')
+window.geometry('800x550')
 window.title('Memory Cards')
 
 #Hieararchy Event

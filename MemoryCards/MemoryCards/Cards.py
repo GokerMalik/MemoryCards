@@ -197,8 +197,20 @@ class Category(Table):
         self.decks = dict()
         table.addCat(self)
 
-    def updateDict(self, cat, newName):
-        pass
+    def updateDict(self, deck, newName):
+        deckKeys = list(self.decks.keys())
+        deckVals = list(self.decks.values())
+
+        newDecks = dict()
+
+        for i in range(len(deckKeys)):
+
+            if deck == deckVals[i]:
+                newDecks.update({newName:deck})
+            else:
+                newDecks.update({deckKeys[i]:deckVals[i]})
+
+        self.cats = newDecks
 
     #str
     def __str__(self):
@@ -254,12 +266,12 @@ class Deck(Category):
     def __str__(self):
         return self.nameDeck
 
-    def update(self, newCategory, newName, newFront, newBack):
+    def updateDeck(self, newCategory, newName, newFront, newBack):
 
         if self.category != newCategory:
             pass
 
-        if newName != self.nameCat:
+        if newName != self.nameDeck:
             self.category.updateDict(self, newName)
             self.nameCat = newName
 
