@@ -68,13 +68,19 @@ class sqlConnection():
     def cardConverter(self, s):
 
         #deck, front, back
-        deckList = self.curs.execute("SELECT deckCol FROM decks").fetchall()
+
         valList = s.decode("utf-8").split("::--::")
 
-        #we will check all the decks and accept the only one who has the same category with the commited card.
-        for deck in deckList:
-            if (valList[1] == deck.nameDeck and valList[0] == deck.category):
-                cardDeck = deck
+        catList = self.table.cats
+
+        for category in catList:
+            if (valList[0] == catList[category].nameCat):
+                cat = catList[category]
+                break
+
+        for deck in cat.decks:
+            if valList[1] == cat.decks[deck].nameDeck:
+                cardDeck = cat.decks[deck]
                 break
 
         return Card(cardDeck, valList[2], valList[3])
@@ -138,7 +144,7 @@ class Table(object):
 
         ####celan all the cards
         for key in self.cats:
-            for ind, deck in self.cats[key].decks:
+            for ind in self.cats[key].decks:
                 for i in range(len(self.cats[key].decks[ind].cards)):
                     self.cats[key].decks[ind].cards.popitem()
 
@@ -309,12 +315,13 @@ class Card(Deck):
         self.category = deck.category
 
         #we send the category information here. When we receive it, we will check if the deck belongs to this category or not.
-        self.sqlVal = deck.category + "::--::" + deck + "::--::" + front + "::--::" + back
+        self.sqlVal = deck.category.nameCat + "::--::" + deck.nameDeck + "::--::" + front + "::--::" + back
 
         deck.addCard(self)
 
     #conform
     def __conform__(self, protocol):
+
         if protocol == sqlite3.PrepareProtocol:
             return self.sqlVal
 

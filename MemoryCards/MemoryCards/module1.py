@@ -12,6 +12,9 @@ import sys
 import subprocess
 import os
 
+
+######################################################
+
 #Define menu items
 def CreateNewTable():
 
@@ -67,6 +70,8 @@ def ActiveItem(button):
     button.config(state = 'normal')
 def deActiveItem(button):
     button.config(state = 'disabled')
+
+######################################################
 
 #define hierarchy events
 def itemSelect(event):
@@ -267,6 +272,29 @@ def hierUpdate():
             deckInd += 1
         catInd +=1
 
+#Update card table
+def updateCards(deck):
+
+    for i in CardList.get_children():
+        CardList.delete(i)
+
+    CardList.insert('', tkinter.END, text = 'Fronts', iid = 1, open = False)
+    CardList.insert('', tkinter.END, text = 'Backs', iid = 2, open = False)
+
+    cardFrInd = 101
+    cardBcInd = 201
+
+    for card in deck.cards:
+        CardList.insert('',tkinter.END, text = deck.cards[card].front, iid = cardFrInd, open = False)
+        CardList.move(cardFrInd, 1, cardFrInd)
+
+        CardList.insert('',tkinter.END, text = deck.cards[card].back, iid = cardBcInd, open = False)
+        CardList.move(cardBcInd, 2, cardBcInd)
+
+        cardFrInd += 1
+        cardBcInd += 1
+
+
 #collect from hierarchy table
 def collectHierarchy():
 
@@ -327,8 +355,7 @@ def DeckNameChange(deckName):
 
     return deckName
 
-
-
+########################################################
 
 #command newCategory
 def newCategory():
@@ -363,9 +390,6 @@ def modifyCategory():
         cat.UpdateCat(nameCategory)
 
     hierUpdate()
-
-
-
 
 #command newDeck
 def newDeck():
@@ -402,13 +426,14 @@ def deleteDeck():
 
     hierUpdate()
 
-
-
-
 #command newCard
 def newCard():
+    sc, cc, selectedDecks = collectHierarchy()
 
-    pass
+    deck = list(selectedDecks.values())[0]
+    Cards.Card(deck, cardFront.get('1.0', 'end'), cardBack.get('1.0', 'end'))
+
+    updateCards(deck)
 
 #command deleteCard
 def deleteCategory():
@@ -420,8 +445,7 @@ def modifyCategory():
 
     pass
 
-
-
+#########################################################
 
 #LeftFrame
 def setLeftFrame():
@@ -604,7 +628,7 @@ def setCardInfoFrame():
     frCardFrontEntry = tkinter.Frame(frCardInf)
     frCardFrontEntry.pack(side = 'top', fill = 'x')
 
-    entryCardFront = tkinter.Text(frCardFrontEntry, state = 'disabled', height = 2, width = 20)
+    entryCardFront = tkinter.Text(frCardFrontEntry, state = 'normal', height = 2, width = 20)
     entryCardFront.pack(side = 'left', padx = 8, pady = 3)
 
     #set the name label
@@ -618,7 +642,7 @@ def setCardInfoFrame():
     frCardBackEntry = tkinter.Frame(frCardInf)
     frCardBackEntry.pack(side = 'top', fill = 'x')
 
-    entryCardBack = tkinter.Text(frCardBackEntry, state = 'disabled', height = 2, width = 20)
+    entryCardBack = tkinter.Text(frCardBackEntry, state = 'normal', height = 2, width = 20)
     entryCardBack.pack(side = 'left', padx = 8, pady = 3)
 
     #########################################
@@ -639,7 +663,7 @@ def setCardInfoFrame():
     frCardBut = tkinter.Frame(rightFrame)
     frCardBut.pack(side = 'top', fill = 'x')
 
-    CreateBut = tkinter.Button(frCardBut, text = 'Create')
+    CreateBut = tkinter.Button(frCardBut, text = 'Create', command = newCard)
     CreateBut.pack(side = 'left', fill = 'x', pady = 5, padx = 3)
 
     DelBut = tkinter.Button(frCardBut, text = 'Delete')
@@ -648,7 +672,7 @@ def setCardInfoFrame():
     ModBut = tkinter.Button(frCardBut, text = 'Modify')
     ModBut.pack(side = 'left', fill = 'x', pady = 5, padx = 3)
 
-    return labelCardFront
+    return labelCardFront, entryCardFront, entryCardBack
 
 #sessionFrame
 def setSessionFrame():
@@ -668,6 +692,7 @@ def handleTable(table):
 
     resCats = table.sql3.curs.execute("SELECT categoryCol FROM cats").fetchall()
     resDecks = table.sql3.curs.execute("SELECT deckCol from decks").fetchall()
+    resCards = table.sql3.curs.execute("SELECT cardCol from cards").fetchall()
 
     table.disconnect()
 
@@ -701,7 +726,7 @@ CreateDeck, DeleteDeck, ModifyDeck = setDeckControlFrame()
 rightFrame = setRightFrame()
 
 CardList = setCardFrame()
-CardNameInfo = setCardInfoFrame()
+CardNameInfo, cardFront, cardBack = setCardInfoFrame()
 
 #setMidFrame
 midFrame = setMidFrame()
