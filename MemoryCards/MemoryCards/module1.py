@@ -92,6 +92,11 @@ def itemSelect(event):
     AskFrontBox.config(state = 'disabled')
     AskBackBox.config(state = 'disabled')
 
+    #also clean the cards in the card table
+    for i in CardList.get_children():
+        CardList.delete(i)
+    CardList.heading('#0', text='', anchor = tkinter.W)
+
     #Get the recent list of the selection
     selectedCats, calledCats, selectedDecks = collectHierarchy()
 
@@ -138,6 +143,11 @@ def itemSelect(event):
         AskFrontBox.config(state = 'normal')
         AskBackBox.config(state = 'normal')
 
+        deck = list(selectedDecks.values())[0]
+        updateCards(deck)
+
+
+
     ##  OneCatSelection - OneCatCall - OneDeck ::
     if (len(selectedCats) == 1 and len(calledCats) == 1 and len(selectedDecks) == 1):
 
@@ -160,6 +170,9 @@ def itemSelect(event):
         AskFrontBox.config(state = 'normal')
         AskBackBox.config(state = 'normal')
 
+        deck = list(selectedDecks.values())[0]
+        updateCards(deck)
+
     ##  MultiCatSelection - OneCatCall - OneDeck ::
 
     if (len(selectedCats) > 1 and len(calledCats) == 1 and len(selectedDecks) == 1):
@@ -176,6 +189,9 @@ def itemSelect(event):
         CardNum.config(state = 'normal', text = list(selectedDecks.values())[0].cardNum )
         AskFrontBox.config(state = 'normal')
         AskBackBox.config(state = 'normal')
+
+        deck = list(selectedDecks.values())[0]
+        updateCards(deck)
 
     #####################################################
 
@@ -256,6 +272,14 @@ def itemSelect(event):
     if len(strDeckName.get()) != 0:
         ActiveItem(CreateDeck)
      
+
+#define cardlist events
+def cardSelect(event):
+
+    pass
+
+    
+
 #Update hierarchy Table
 def hierUpdate():
 
@@ -274,25 +298,29 @@ def hierUpdate():
 
 #Update card table
 def updateCards(deck):
-
+    
     for i in CardList.get_children():
         CardList.delete(i)
 
-    CardList.insert('', tkinter.END, text = 'Fronts', iid = 1, open = False)
-    CardList.insert('', tkinter.END, text = 'Backs', iid = 2, open = False)
+    CardList.heading('#0', text=deck, anchor = tkinter.W)
 
-    cardFrInd = 101
-    cardBcInd = 201
+    if len(deck.cards) != 0:
 
-    for card in deck.cards:
-        CardList.insert('',tkinter.END, text = deck.cards[card].front, iid = cardFrInd, open = False)
-        CardList.move(cardFrInd, 1, cardFrInd)
+        CardList.insert('', tkinter.END, text = 'Fronts', iid = 1, open = False)
+        CardList.insert('', tkinter.END, text = 'Backs', iid = 2, open = False)
 
-        CardList.insert('',tkinter.END, text = deck.cards[card].back, iid = cardBcInd, open = False)
-        CardList.move(cardBcInd, 2, cardBcInd)
+        cardFrInd = 101
+        cardBcInd = 201
 
-        cardFrInd += 1
-        cardBcInd += 1
+        for card in deck.cards:
+            CardList.insert('',tkinter.END, text = deck.cards[card].front, iid = cardFrInd, open = False)
+            CardList.move(cardFrInd, 1, cardFrInd)
+
+            CardList.insert('',tkinter.END, text = deck.cards[card].back, iid = cardBcInd, open = False)
+            CardList.move(cardBcInd, 2, cardBcInd)
+
+            cardFrInd += 1
+            cardBcInd += 1
 
 
 #collect from hierarchy table
@@ -331,6 +359,32 @@ def collectHierarchy():
                     break
 
     return selectedCategories, calledCategories, selectedDecks
+
+#collect cards
+def collectCards(deck):
+
+    #Create a dictionary to register all the items for once.
+    selectedCards = dict()
+
+    for selectedItem in CardList.selection():
+
+        item = CardList.item(selectedItem)
+        parent_iid = CardList.parent(selectedItem)
+
+        if parent_iid == 1:
+            for card in deck.cards:
+                if item['text'] == deck.cards[card].front:
+                    selectedCards.update({item['text']:deck.cards[card]})
+                    break
+        elif parent_iid == 2:
+            for card in deck.cards:
+                if item['text'] == deck.cards[card].back:
+                    selectedCards.update({item['text']:deck.cards[card]})
+                    break
+        else:
+            pass
+
+    return selectedCards
 
 #define deckNameBox events
 def DeckNameChange(deckName):
@@ -436,12 +490,12 @@ def newCard():
     updateCards(deck)
 
 #command deleteCard
-def deleteCategory():
+def deleteCard():
 
     pass
 
 #command modifyCard
-def modifyCategory():
+def modifyCard():
 
     pass
 
@@ -801,5 +855,6 @@ window.title('Memory Cards')
 
 #Hieararchy Event
 Hierarchy.bind('<<TreeviewSelect>>', itemSelect)
+CardList.bind('<<TreeviewSelect>>', cardSelect)
 
 window.mainloop()
