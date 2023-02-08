@@ -276,9 +276,26 @@ def itemSelect(event):
 #define cardlist events
 def cardSelect(event):
 
-    pass
-
+    #Always strart by setting all to back their defaults.
+    deActiveItem(DeleteCard)
+    deActiveItem(ModifyCard)
+    deActiveItem(ShowFront)  
+    deActiveItem(ShowBack)
     
+    #Get the list of the selected cards
+    #selectedCards = collectCards()
+
+    #One card is selecrted
+    if len(selectedCards) > 0 and len(selectedCards) <= 1:
+        ActiveItem(DeleteCard)
+        ActiveItem(ModifyCard)
+        ActiveItem(ShowFront)  
+        ActiveItem(ShowBack)
+
+    #multiple cards are selected
+    if len(selectedCards) > 1:
+        ActiveItem(DeleteCard)
+        ActiveItem(ModifyCard)
 
 #Update hierarchy Table
 def hierUpdate():
@@ -726,7 +743,7 @@ def setCardInfoFrame():
     ModBut = tkinter.Button(frCardBut, text = 'Modify')
     ModBut.pack(side = 'left', fill = 'x', pady = 5, padx = 3)
 
-    return labelCardFront, entryCardFront, entryCardBack
+    return CreateBut, DelBut, ModBut, FrontTogBut, BackTogBut, labelCardFront, entryCardFront, entryCardBack
 
 #sessionFrame
 def setSessionFrame():
@@ -780,7 +797,7 @@ CreateDeck, DeleteDeck, ModifyDeck = setDeckControlFrame()
 rightFrame = setRightFrame()
 
 CardList = setCardFrame()
-CardNameInfo, cardFront, cardBack = setCardInfoFrame()
+CreateCard, DeleteCard, ModifyCard, ShowFront, ShowBack, CardNameInfo, cardFront, cardBack = setCardInfoFrame()
 
 #setMidFrame
 midFrame = setMidFrame()
